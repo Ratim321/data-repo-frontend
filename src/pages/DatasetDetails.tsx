@@ -1,16 +1,45 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dataset } from '../types';
+import { useAuth } from '../AuthContext';
+import { fetchHospitalDatasets, fetchPublicDatasets } from '../api';
 
-interface DatasetDetailsProps {
-  datasets: Dataset[];
-}
-
-const DatasetDetails = ({ datasets }: DatasetDetailsProps) => {
+const DatasetDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hospital } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'preview' | 'metadata'>('overview');
-  const dataset = datasets.find((d) => d.id === id);
+  const [dataset, setDataset] = useState<Dataset | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDataset = async () => {
+      try {
+        const datasets = hospital 
+          ? await fetchHospitalDatasets(hospital.id)
+          : await fetchPublicDatasets();
+        
+        const found = datasets.find(d => d.id === id);
+        setDataset(found || null);
+      } catch (error) {
+        console.error('Error loading dataset:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDataset();
+  }, [id, hospital]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-100 mb-4">
+          Loading...
+        </h1>
+      </div>
+    );
+  }
 
   if (!dataset) {
     return (
@@ -235,4 +264,4 @@ const DatasetDetails = ({ datasets }: DatasetDetailsProps) => {
   );
 };
 
-export default DatasetDetails; 
+export default DatasetDetails;
