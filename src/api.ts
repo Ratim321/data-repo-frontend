@@ -1,6 +1,43 @@
 // src/api.ts
 // Mock API for hospital login and dataset management
 
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8000/api';
+
+// Helper function to get CSRF token
+function getCookie(name: string) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
+    headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+    }
+});
+
+// Add request interceptor to ensure CSRF token is always present
+api.interceptors.request.use((config) => {
+    const csrfToken = getCookie('csrftoken');
+    if (csrfToken) {
+        config.headers['X-CSRFToken'] = csrfToken;
+    }
+    return config;
+});
+
 export interface Hospital {
   id: string;
   name: string;
@@ -14,21 +51,21 @@ export interface Hospital {
 }
 
 export interface Dataset {
-  id: string;
+  id: number;
   name: string;
   description: string;
-  tags: string[];
-  fileType: string;
-  createdAt: string;
-  hospitalId: string;
-  hospitalName: string;
-  size: string;
-  downloads: number;
-  visibility: 'public' | 'private';
-  lastUpdated: string;
-  columns?: number;
-  rows?: number;
-  previewData?: any[];
+  file: string;
+  file_type: string;
+  size: number;
+  created_at: string;
+  updated_at: string;
+  is_public: boolean;
+}
+
+export interface User {
+    id: number;
+    username: string;
+    email: string;
 }
 
 // Mock hospital credentials with extended information
@@ -125,72 +162,64 @@ let datasets: Dataset[] = [
 ];
 
 // Mock login function
-export async function loginHospital(email: string, password: string): Promise<Hospital | null> {
-  const hospital = hospitals.find(h => h.email === email && h.password === password);
-  await new Promise(res => setTimeout(res, 500));
-  return hospital || null;
-}
+export const login = async (username: string, password: string) => {
+    const response = await api.post('/auth/login/', { username, password });
+    return response.data;
+};
+
+export const logout = async () => {
+    const response = await api.post('/auth/logout/');
+    return response.data;
+};
 
 // Fetch all public datasets
-export async function fetchPublicDatasets(): Promise<Dataset[]> {
-  await new Promise(res => setTimeout(res, 300));
-  return datasets.filter(ds => ds.visibility === 'public');
-}
+export const getDatasets = async () => {
+    const response = await api.get<Dataset[]>('/datasets/');
+    return response.data;
+};
 
 // Fetch datasets for a specific hospital (including private)
-export async function fetchHospitalDatasets(hospitalId: string): Promise<Dataset[]> {
-  await new Promise(res => setTimeout(res, 300));
-  return datasets.filter(ds => ds.hospitalId === hospitalId);
-}
+export const getDataset = async (id: number) => {
+    const response = await api.get<Dataset>(`/datasets/${id}/`);
+    return response.data;
+};
 
 // Add a new dataset
-export async function addDataset(dataset: Omit<Dataset, 'id' | 'createdAt' | 'downloads'>): Promise<Dataset> {
-  const newDataset: Dataset = {
-    ...dataset,
-    id: 'ds' + (datasets.length + 1),
-    createdAt: new Date().toISOString(),
-    lastUpdated: new Date().toISOString(),
-    downloads: 0
-  };
-  datasets = [newDataset, ...datasets];
-  await new Promise(res => setTimeout(res, 300));
-  return newDataset;
-}
-
-// Get dataset by ID
-export async function getDatasetById(id: string): Promise<Dataset | null> {
-  await new Promise(res => setTimeout(res, 300));
-  return datasets.find(ds => ds.id === id) || null;
-}
+export const createDataset = async (formData: FormData) => {
+    const response = await api.post<Dataset>('/datasets/create/', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
 
 // Update dataset
-export async function updateDataset(id: string, updates: Partial<Dataset>): Promise<Dataset | null> {
-  await new Promise(res => setTimeout(res, 300));
-  const index = datasets.findIndex(ds => ds.id === id);
-  if (index === -1) return null;
-  
-  datasets[index] = {
-    ...datasets[index],
-    ...updates,
-    lastUpdated: new Date().toISOString()
-  };
-  
-  return datasets[index];
-}
+export const updateDataset = async (id: number, data: Partial<Dataset>) => {
+    const response = await api.patch<Dataset>(`/datasets/${id}/`, data);
+    return response.data;
+};
 
 // Delete dataset
-export async function deleteDataset(id: string): Promise<boolean> {
-  await new Promise(res => setTimeout(res, 300));
-  const initialLength = datasets.length;
-  datasets = datasets.filter(ds => ds.id !== id);
-  return datasets.length < initialLength;
-}
+export const deleteDataset = async (id: number) => {
+    const response = await api.delete(`/datasets/${id}/`);
+    return response.data;
+};
 
 // Increment download count
-export async function incrementDownloads(id: string): Promise<void> {
-  await new Promise(res => setTimeout(res, 300));
-  const dataset = datasets.find(ds => ds.id === id);
-  if (dataset) {
-    dataset.downloads += 1;
-  }
-}
+export const downloadDataset = async (id: number) => {
+    const response = await api.get(`/datasets/${id}/download/`, {
+        responseType: 'blob',
+    });
+    return response.data;
+};
+
+// Check if user is authenticated
+export const checkAuth = async () => {
+    try {
+        const response = await api.get('/users/profile/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

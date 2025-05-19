@@ -1,34 +1,61 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './AuthContext';
+import { useUser } from './contexts/UserContext';
 import Home from './pages/Home';
 import DatasetList from './pages/DatasetList';
 import CreateDataset from './pages/CreateDataset';
 import DatasetDetails from './pages/DatasetDetails';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Navbar from './components/Navbar';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
-  const { hospital } = useAuth();
+  const { user, loading } = useUser();
   const location = useLocation();
-  if (!hospital) {
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
   return children;
 }
 
 function AppRoutes() {
-  const { hospital, login, logout } = useAuth();
+  const { user, logout } = useUser();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <>
-      {hospital && <Navbar />}
+      {user && <Navbar />}
       <Routes>
         <Route
           path="/login"
           element={
-            hospital ? (
+            user ? (
               <Navigate to="/" replace />
             ) : (
-              <Login onLogin={login} />
+              <Login onLogin={() => {}} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            user ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Register />
             )
           }
         />
@@ -66,13 +93,13 @@ function AppRoutes() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {hospital && (
+      {user && (
         <div className="fixed bottom-4 right-4">
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="bg-gray-800 border border-gray-700 text-gray-100 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
           >
-            Logout ({hospital.name})
+            Logout ({user.username})
           </button>
         </div>
       )}
@@ -80,12 +107,12 @@ function AppRoutes() {
   );
 }
 
-export default function App() {
+function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
+
+export default App;

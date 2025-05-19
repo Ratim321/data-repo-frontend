@@ -1,92 +1,103 @@
-# DataRepo Frontend
+# Data Repository Frontend
 
-A Kaggle-like data repository frontend built with React, TypeScript, and Tailwind CSS.
+A modern web application for managing and sharing datasets, built with React, TypeScript, and Django.
 
 ## Features
 
-- View a list of datasets with metadata
-- Create new datasets with name, description, and tags
-- Upload data files (CSV, JSON)
-- View dataset details
-- Responsive design
-- Modern UI with Tailwind CSS
+- User authentication
+- Upload datasets (single or multiple files)
+- Automatic ZIP creation for multiple files
+- Public/private dataset visibility
+- Dataset management (create, read, update, delete)
+- File download functionality
+- Modern, responsive UI
 
 ## Prerequisites
 
 - Node.js (v14 or higher)
-- npm or yarn
-
-## Getting Started
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd data-repo-frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-4. Open your browser and navigate to `http://localhost:5173`
+- Python (v3.8 or higher)
+- pip (Python package manager)
 
 ## Project Structure
 
 ```
-data-repo-frontend/
-├── src/
-│   ├── components/
-│   │   └── Navbar.tsx
-│   ├── pages/
-│   │   ├── Home.tsx
-│   │   ├── DatasetList.tsx
-│   │   ├── CreateDataset.tsx
-│   │   └── DatasetDetails.tsx
-│   ├── types.ts
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── index.html
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── README.md
+.
+├── backend/               # Django backend
+│   ├── core/             # Django project settings
+│   ├── datasets/         # Datasets app
+│   ├── requirements.txt  # Python dependencies
+│   └── manage.py         # Django management script
+└── src/                  # React frontend
+    ├── components/       # Reusable components
+    ├── pages/           # Page components
+    ├── api.ts           # API integration
+    └── ...
 ```
 
-## Technologies Used
+## Setup
 
-- React 18
-- TypeScript
-- Vite
-- React Router
-- Tailwind CSS (via CDN)
+### Backend Setup
 
-## Development
+1. Create and activate a virtual environment:
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   ```
 
-The project uses Vite as the build tool and development server. The main entry point is `src/main.tsx`, which renders the `App` component.
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Building for Production
+3. Run migrations:
+   ```bash
+   python manage.py migrate
+   ```
 
-To create a production build:
+4. Create a superuser (optional):
+   ```bash
+   python manage.py createsuperuser
+   ```
 
-```bash
-npm run build
-# or
-yarn build
-```
+5. Start the backend server:
+   ```bash
+   python manage.py runserver
+   ```
 
-The built files will be in the `dist` directory.
+The backend will be available at `http://localhost:8000`
+
+### Frontend Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+The frontend will be available at `http://localhost:5173`
+
+## API Endpoints
+
+- `GET /api/datasets/` - List all datasets
+- `POST /api/datasets/` - Create a new dataset
+- `GET /api/datasets/{id}/` - Get dataset details
+- `PATCH /api/datasets/{id}/` - Update dataset
+- `DELETE /api/datasets/{id}/` - Delete dataset
+- `GET /api/datasets/{id}/download/` - Download dataset
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the LICENSE file for details. 

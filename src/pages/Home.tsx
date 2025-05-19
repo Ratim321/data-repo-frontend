@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { useAuth } from '../AuthContext';
+import { useUser } from '../contexts/UserContext';
 
 const Home = () => {
-  const { hospital } = useAuth();
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
 
   const features = [
@@ -26,25 +26,11 @@ const Home = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {hospital ? (
+      {user ? (
         <div className="text-center mb-16 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-100 mb-6">
-            Welcome, {hospital.name}
+            Welcome, {user.username}
           </h1>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <div className="text-2xl font-bold text-primary-400">{hospital.totalDatasets}</div>
-              <div className="text-gray-300">Total Datasets</div>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <div className="text-2xl font-bold text-primary-400">{hospital.totalDownloads}</div>
-              <div className="text-gray-300">Total Downloads</div>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <div className="text-2xl font-bold text-primary-400">{hospital.type}</div>
-              <div className="text-gray-300">Institution Type</div>
-            </div>
-          </div>
           <div className="flex justify-center space-x-4">
             <Link
               to="/datasets"
@@ -72,7 +58,7 @@ const Home = () => {
             to="/login"
             className="bg-primary-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary-700 transition-colors"
           >
-            Login to Your Institution
+            Login to Your Account
           </Link>
         </div>
       )}
@@ -93,7 +79,7 @@ const Home = () => {
       </div>
 
       {/* Recent Activity Section */}
-      {hospital && (
+      {user && (
         <div className="mt-16">
           <h2 className="text-2xl font-bold text-gray-100 mb-6">Recent Activity</h2>
           <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">

@@ -1,68 +1,97 @@
-import { useState } from 'react';
-import { loginHospital, Hospital } from '../api';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 interface LoginProps {
-  onLogin: (hospital: Hospital) => void;
+  onLogin: (user: any) => void;
 }
 
-const Login = ({ onLogin }: LoginProps) => {
-  const [email, setEmail] = useState('citygen@example.com');
-  const [password, setPassword] = useState('password123');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const navigate = useNavigate();
+  const { login } = useUser();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    setLoading(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    const hospital = await loginHospital(email, password);
-    setLoading(false);
-    if (hospital) {
-      onLogin(hospital);
+
+    try {
+      const user = await login(formData);
+      onLogin(user);
       navigate('/');
-    } else {
-      setError('Invalid credentials. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-700">
-        <h1 className="text-2xl font-bold text-gray-100 mb-6 text-center">Hospital Login</h1>
-        {error && <div className="mb-4 text-red-400 text-center">{error}</div>}
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Email</label>
-          <input
-            type="email"
-            className="w-full px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            autoComplete="username"
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
         </div>
-        <div className="mb-6">
-          <label className="block text-gray-300 mb-2">Password</label>
-          <input
-            type="password"
-            className="w-full px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-        </div>
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-        <div className="mt-6 text-gray-400 text-xs text-center">
-          <div>Demo credentials:</div>
-          <div>citygen@example.com / password123</div>
-          <div>metrohealth@example.com / secure456</div>
-        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="username" className="sr-only">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Username"
+                value={formData.username}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Sign in
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
